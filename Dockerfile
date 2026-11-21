@@ -38,6 +38,8 @@ COPY . .
 COPY --from=assets /app/public/build ./public/build
 RUN rm -f public/hot \
     && composer dump-autoload --optimize --no-dev \
+    && php artisan view:cache \
+    && php artisan route:cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod +x docker/start.sh
 
