@@ -1,0 +1,56 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Hind Siliguri', 'Noto Sans Bengali', ui-sans-serif, system-ui, sans-serif;
+
+    /* Digital খাতা palette */
+    --color-ledger-950: #08261B;
+    --color-ledger-900: #0E3B2B; /* sidebar */
+    --color-ledger-800: #134A36;
+    --color-ledger-700: #17603F; /* primary actions */
+    --color-ledger-600: #1E7A50;
+    --color-ledger-200: #BFDCCB;
+    --color-ledger-100: #E3F0E8;
+    --color-ledger-50:  #F2F7F3;
+    --color-paper: #F6F7F4;      /* page background */
+    --color-rule: #D9E2DB;       /* register lines */
+    --color-ink: #1C2A23;        /* body text */
+    --color-ink-soft: #5A6B62;
+    --color-pending: #A86A12;
+    --color-pending-50: #FBF3E4;
+    --color-danger: #B42318;
+    --color-danger-50: #FDECEA;
+}
+
+[x-cloak] { display: none !important; }
+
+@layer components {
+    /* Tailwind v4 cannot @apply custom classes, so each button variant carries the base styles */
+    .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ledger-600 disabled:opacity-50 bg-ledger-700 text-white hover:bg-ledger-800; }
+    .btn-quiet { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ledger-600 disabled:opacity-50 border border-rule bg-white text-ink hover:bg-ledger-50; }
+    .btn-danger { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ledger-600 disabled:opacity-50 bg-danger text-white hover:bg-red-800; }
+
+    .field-label { @apply mb-1 block text-sm font-semibold text-ink; }
+    .field { @apply block w-full rounded-md border border-rule bg-white px-3 py-2 text-[15px] text-ink placeholder:text-ink-soft/60 focus:border-ledger-600 focus:ring-2 focus:ring-ledger-200 focus:outline-none; }
+    .field-help { @apply mt-1 text-sm text-ink-soft; }
+    .field-error { @apply mt-1 text-sm font-medium text-danger; }
+
+    .panel { @apply rounded-lg border border-rule bg-white; }
+
+    /* Register-style table: ruled rows like the paper ledger */
+    .register { @apply w-full border-collapse text-left text-[15px]; }
+    .register thead th { @apply border-b-2 border-ledger-700 bg-ledger-50 px-3 py-2 text-sm font-semibold text-ledger-900 whitespace-nowrap; }
+    .register tbody td { @apply border-b border-rule px-3 py-2.5 align-top; }
+    .register tbody tr:hover td { @apply bg-ledger-50/60; }
+    .register .num { @apply text-right tabular-nums; }
+}
+
+@media print {
+    .no-print { display: none !important; }
+    body { background: #fff; }
+}

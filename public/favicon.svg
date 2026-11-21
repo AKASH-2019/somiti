@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>সমিতি ও কিস্তি</title>
+  <rect width="64" height="64" rx="14" fill="#0E3B2B"/>
+  <g stroke="#0E3B2B" stroke-width="1.6">
+    <path d="M14 45v7a18 6.5 0 0 0 36 0v-7" fill="#8FC0A5"/>
+    <ellipse cx="32" cy="45" rx="18" ry="6.5" fill="#E3F0E8"/>
+    <path d="M14 35v7a18 6.5 0 0 0 36 0v-7" fill="#8FC0A5"/>
+    <ellipse cx="32" cy="35" rx="18" ry="6.5" fill="#E3F0E8"/>
+    <path d="M14 25v7a18 6.5 0 0 0 36 0v-7" fill="#D9A441"/>
+    <ellipse cx="32" cy="25" rx="18" ry="6.5" fill="#F3D27A"/>
+  </g>
+  <ellipse cx="32" cy="25" rx="10" ry="3.4" fill="none" stroke="#B07D1F" stroke-width="1.4"/>
+</svg>

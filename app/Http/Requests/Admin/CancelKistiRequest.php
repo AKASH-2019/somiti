@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Http\Requests\Admin;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class CancelKistiRequest extends FormRequest
+{
+    protected $errorBag = 'cancel';
+
+    public function authorize(): bool
+    {
+        return $this->user()?->can('cancel', $this->route('account')) ?? false;
+    }
+
+    public function rules(): array
+    {
+        return ['reason' => ['required', 'string', 'max:255']];
+    }
+
+    public function attributes(): array
+    {
+        return ['reason' => 'বাতিলের কারণ'];
+    }
+}
