@@ -13,7 +13,7 @@
         </x-slot:actions>
     </x-page-header>
 
-    @if (empty($items))
+    @if (collect($items)->where('paid', false)->isEmpty())
         <div class="panel max-w-2xl p-5 text-ink-soft">এই অ্যাকাউন্টে নেওয়ার মতো কোনো বকেয়া বা অগ্রিম দিন/কিস্তি নেই।</div>
     @else
     <form method="POST" action="{{ route($rp . '.store', $account) }}" class="grid gap-6 lg:grid-cols-5"
@@ -35,22 +35,32 @@
             <p class="border-b border-rule bg-ledger-50 px-4 py-2 text-sm text-ink-soft">
                 টাকার পরিমাণ লিখলে সবচেয়ে পুরনো বকেয়া থেকে নিজে থেকে বাছাই হবে। চাইলে টিক দিয়ে বদলে নিন।
             </p>
-            <div class="max-h-[30rem] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-rule px-4 py-2 text-sm">
+                <label class="flex items-center gap-2 text-ink-soft">
+                    <input type="checkbox" class="h-4 w-4 rounded border-rule text-ledger-700" x-model="showPaid">
+                    <span x-text="somiti ? 'পরিশোধিত দিনও দেখান' : 'পরিশোধিত কিস্তিও দেখান'"></span>
+                </label>
+                <span class="text-ink-soft" x-text="'বকেয়া ' + bnDigits(dueCount()) + 'টি'"></span>
+            </div>
+            <div class="max-h-[34rem] overflow-y-auto">
                 <template x-for="(group, gi) in groups()" :key="gi">
                     <div>
                         <p class="sticky top-0 z-10 border-b border-rule bg-white px-4 py-1.5 text-sm font-semibold"
                            :class="{ 'text-danger': group.kind === 'previous', 'text-ledger-700': group.kind === 'current', 'text-ink-soft': group.kind === 'advance' }"
-                           x-text="group.title + ' (' + bnDigits(group.items.length) + ')'"></p>
+                           x-text="group.title"></p>
                         <template x-for="item in group.items" :key="item.key">
-                            <label class="flex cursor-pointer items-center gap-3 border-b border-rule px-4 py-2 hover:bg-ledger-50"
-                                   :class="isSelected(item.key) && 'bg-ledger-100'">
-                                <input type="checkbox" class="h-4 w-4 rounded border-rule text-ledger-700" :checked="isSelected(item.key)" @change="toggle(item.key)">
+                            <label class="flex items-center gap-3 border-b border-rule px-4 py-2"
+                                   :class="item.paid ? 'cursor-default bg-paper text-ink-soft' : (isSelected(item.key) ? 'cursor-pointer bg-ledger-100' : 'cursor-pointer hover:bg-ledger-50')">
+                                <input type="checkbox" class="h-4 w-4 rounded border-rule text-ledger-700"
+                                       :checked="item.paid || isSelected(item.key)" :disabled="item.paid" @change="toggle(item.key)">
                                 <span class="flex-1">
                                     <span x-show="item.sequence" class="font-semibold" x-text="'কিস্তি নং ' + bnDigits(item.sequence) + ' — '"></span>
                                     <span x-text="item.label"></span>
-                                    <span x-show="item.partial" class="ml-1 rounded bg-pending-50 px-1.5 text-xs text-pending">আংশিক জমা আছে</span>
+                                    <span x-show="item.partial" class="ml-1 rounded bg-pending-50 px-1.5 text-xs text-pending" x-text="'আংশিক জমা ' + bnMoney(item.paid_amount)"></span>
+                                    <span x-show="!item.paid && item.kind === 'previous'" class="ml-1 rounded bg-danger-50 px-1.5 text-xs text-danger">বকেয়া</span>
                                 </span>
-                                <span class="tabular-nums" x-text="bnMoney(item.remaining)"></span>
+                                <span class="tabular-nums" x-show="!item.paid" x-text="bnMoney(item.remaining)"></span>
+                                <span class="text-sm font-semibold text-ledger-700" x-show="item.paid" x-text="'✓ পরিশোধিত ' + bnMoney(item.paid_amount)"></span>
                             </label>
                         </template>
                     </div>
@@ -107,31 +117,36 @@
             return {
                 ...init,
                 submitting: false,
-                titles: { previous: 'পূর্ববর্তী বকেয়া', current: 'আজ', advance: 'অগ্রিম' },
+                showPaid: true,
+                titles: { previous: 'আগের তারিখ', current: 'আজ', advance: 'অগ্রিম' },
+                visible() { return this.items.filter((i) => this.showPaid || !i.paid); },
+                openItems() { return this.items.filter((i) => !i.paid); },
+                dueCount() { return this.openItems().filter((i) => i.kind !== 'advance').length; },
                 groups() {
                     return ['previous', 'current', 'advance']
-                        .map((k) => ({ kind: k, title: this.titles[k], items: this.items.filter((i) => i.kind === k) }))
+                        .map((k) => ({ kind: k, title: this.titles[k], items: this.visible().filter((i) => i.kind === k) }))
                         .filter((g) => g.items.length);
                 },
                 isSelected(key) { return this.selected.includes(key); },
                 ordered(keys) { return this.items.filter((i) => keys.includes(i.key)).map((i) => i.key); },
                 toggle(key) {
+                    if (this.items.find((i) => i.key === key)?.paid) return;
                     this.selected = this.isSelected(key) ? this.selected.filter((k) => k !== key) : this.ordered([...this.selected, key]);
                     this.amount = (this.selectedPaisa() / 100).toFixed(2).replace(/\.00$/, '');
                 },
                 selectedItems() { return this.items.filter((i) => this.selected.includes(i.key)); },
                 selectedPaisa() { return this.selectedItems().reduce((s, i) => s + paisa(i.remaining), 0); },
                 selectedTotal() { return this.selectedPaisa() / 100; },
-                hasToday() { return this.items.some((i) => i.kind === 'current'); },
+                hasToday() { return this.openItems().some((i) => i.kind === 'current'); },
                 setKeys(keys) { this.selected = this.ordered(keys); this.amount = (this.selectedPaisa() / 100).toFixed(2).replace(/\.00$/, ''); },
-                selectDues() { this.setKeys(this.items.filter((i) => i.kind !== 'advance').map((i) => i.key)); },
-                selectToday() { this.setKeys(this.items.filter((i) => i.kind === 'current').map((i) => i.key)); },
+                selectDues() { this.setKeys(this.openItems().filter((i) => i.kind !== 'advance').map((i) => i.key)); },
+                selectToday() { this.setKeys(this.openItems().filter((i) => i.kind === 'current').map((i) => i.key)); },
                 clear() { this.selected = []; this.amount = ''; },
                 /** Oldest first. Somiti takes whole days only; Kisti may end on a part-paid installment. */
                 autoSelect() {
                     let left = paisa(this.amount);
                     const keys = [];
-                    for (const i of this.items) {
+                    for (const i of this.openItems()) {
                         if (left <= 0) break;
                         const r = paisa(i.remaining);
                         if (this.somiti && r > left) break;

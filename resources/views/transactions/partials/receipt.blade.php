@@ -19,7 +19,7 @@
         <p @class(['font-bold text-ledger-900', 'text-base' => $compact, 'text-2xl' => ! $compact])>{{ setting('org_name') }}</p>
         @if (setting('org_address'))<p class="text-ink-soft">{{ setting('org_address') }}</p>@endif
         @if (setting('org_mobile'))<p class="text-ink-soft">মোবাইল: {{ bn_digits(setting('org_mobile')) }}</p>@endif
-        <p @class(['mt-1 font-semibold', 'text-lg' => ! $compact])>টাকা জমার রসিদ{{ $tx->entry_type === \App\Enums\EntryType::Historical ? ' (পুরনো খাতার এন্ট্রি)' : '' }}</p>
+        <p @class(['mt-1 font-semibold', 'text-lg' => ! $compact])>টাকা জমার রসিদ{{ $tx->entry_type === \App\Enums\EntryType::Historical ? ' (পুরনো খাতার এন্ট্রি)' : '' }}{{ ($settlement ?? null) ? ' — সেটেলমেন্ট' : '' }}</p>
     </header>
 
     <dl>
@@ -47,6 +47,10 @@
     </div>
 
     <dl>
+        @if ($settlement ?? null)
+            <div class="{{ $row }}"><dt class="text-ink-soft">সেটেলমেন্টের আগে বাকি</dt><dd>{{ bn_money($settlement->outstanding_before) }}</dd></div>
+            <div class="{{ $row }}"><dt class="text-ink-soft">মওকুফ</dt><dd class="font-semibold">{{ bn_money($settlement->waived_amount) }}</dd></div>
+        @endif
         <div class="{{ $row }}"><dt class="text-ink-soft">{{ $balance['label'] }}</dt><dd class="font-semibold">{{ bn_money($balance['value']) }}</dd></div>
         <div class="{{ $row }}"><dt class="text-ink-soft">পেমেন্ট পদ্ধতি</dt><dd>{{ $tx->payment_method->label() }}</dd></div>
         <div class="{{ $row }}"><dt class="text-ink-soft">কালেক্টরের নাম</dt><dd>{{ $tx->collector->name }}</dd></div>

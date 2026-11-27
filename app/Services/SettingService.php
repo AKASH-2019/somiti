@@ -17,6 +17,7 @@ class SettingService
         'share_value' => ['value' => '20.00', 'type' => 'decimal'],
         'weekly_off_days' => ['value' => '[]', 'type' => 'json'],
         'receipt_footer' => ['value' => 'আমাদের সাথে থাকার জন্য ধন্যবাদ।', 'type' => 'string'],
+        'member_id_prefix' => ['value' => 'S5', 'type' => 'string'],
     ];
 
     public function all(): array

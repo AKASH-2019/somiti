@@ -6,15 +6,14 @@ use App\Enums\MemberStatus;
 use App\Models\Member;
 use App\Models\User;
 use App\Services\AuditService;
-use App\Services\NumberSequenceService;
 use Illuminate\Support\Facades\DB;
 
 class MemberService
 {
-    private const EDITABLE = ['name', 'business_name', 'business_address', 'mobile', 'joined_at', 'notes'];
+    private const EDITABLE = ['name', 'business_name', 'business_address', 'mobile', 'joined_at', 'notes', 'member_code'];
 
     public function __construct(
-        private NumberSequenceService $sequences,
+        private MemberCodeService $codes,
         private MemberAssignmentService $assignments,
         private AuditService $audit,
     ) {}
@@ -30,7 +29,7 @@ class MemberService
         return DB::transaction(function () use ($data, $actor, $collector) {
             $member = Member::query()->create([
                 ...array_intersect_key($data, array_flip(self::EDITABLE)),
-                'member_code' => $this->sequences->next('member', 'M', 5, false),
+                'member_code' => MemberCodeService::normalize($data['member_code'] ?? null) ?? $this->codes->next(),
                 'status' => MemberStatus::Active,
                 'created_by' => $actor->id,
             ]);

@@ -32,7 +32,7 @@ class MemberManagementTest extends TestCase
             ->assertRedirect()->assertSessionHas('success');
 
         $member = Member::query()->firstOrFail();
-        $this->assertSame('M-00001', $member->member_code);
+        $this->assertSame('S5-001', $member->member_code);
         $this->assertSame($rahim->id, $member->collector_id);
         $this->assertSame(1, $member->assignments()->whereNull('assigned_to')->where('collector_id', $rahim->id)->count());
     }

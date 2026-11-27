@@ -155,3 +155,19 @@ Decisions agreed before Phase 1. Later phases must follow these.
 - Collectors get 9 of the reports, always limited to their own receipts, accounts and cash; the
   organisation-wide ones (কালেক্টরভিত্তিক সংগ্রহ, শেয়ারভিত্তিক হিসাব, কালেক্টর ব্যালেন্স, দৈনিক ক্যাশ ক্লোজিং for all) stay admin-only.
 - Dashboard "today's collection" = completed cash receipts collected today.
+
+## Update after first live use
+- **Member ID:** `PREFIX-NNN`, e.g. `S5-001`. The prefix is set in সেটিংস (default `S5`). The next free number is
+  suggested; staff may type another (e.g. a paper-register number `S5-010`) as long as it is unused. Bengali digits
+  and lowercase are accepted and normalised. Only the admin can change an existing member's ID.
+- **New member form** can open the member's Somiti account in the same save (on by default; untick for Kisti-only
+  members). Shares, start date (not before joining) and opening savings are entered there. All or nothing.
+- **Kisti form** works for an existing member or a new member entered in the same form. The form's note belongs to the loan.
+- **Collection screen** also shows past days: missed days (marked বকেয়া) can be collected; already-paid days of the
+  last ~2 months are shown greyed with ✓ (can be hidden). Kisti shows the complete schedule.
+- **Loan page** lists every installment, grouped by month.
+- **Kisti settlement (admin only):** close a loan early with a smaller one-time cash amount. The amount is a normal
+  receipt (oldest installments first) credited to the chosen receiver's cash (admin or the loan's collector).
+  Everything still open is **waived (মওকুফ)**: each open installment's due is reduced to what was paid and the
+  reduction kept in `amount_waived`. The loan becomes "সেটেলমেন্টে বন্ধ". Reversing the settlement receipt restores
+  the waived amounts and re-opens the loan; other receipts of a settled loan cannot be reversed until then.

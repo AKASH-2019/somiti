@@ -63,13 +63,16 @@ class TransactionController extends Controller
         $paidThrough = ReceiptPresenter::paidThrough($transaction);
         $balance = $account->type === AccountType::Somiti
             ? ['label' => 'এই রসিদ পর্যন্ত মোট সঞ্চয়', 'value' => Money::add($paidThrough, (string) ($account->somitiDetail->opening_balance ?? '0'))]
-            : ['label' => 'এই রসিদের পর অবশিষ্ট ঋণ', 'value' => Money::sub((string) $account->kistiDetail->total_payable, $paidThrough)];
+            : ['label' => 'এই রসিদের পর অবশিষ্ট ঋণ', 'value' => $this->kistiLeft($transaction, $paidThrough)];
+
+        $settlement = \App\Models\KistiSettlement::query()->where('transaction_id', $transaction->id)->first();
 
         return view('transactions.show', [
             'tx' => $transaction,
             'covered' => ReceiptPresenter::covered($transaction),
             'balance' => $balance,
             'compact' => $request->query('layout') === 'compact',
+            'settlement' => $settlement,
             'rp' => $this->rp($request),
         ]);
     }
@@ -83,6 +86,16 @@ class TransactionController extends Controller
         }
 
         return back()->with('success', "রসিদ {$transaction->receipt_no} বাতিল করা হয়েছে। সংশ্লিষ্ট দিন/কিস্তি আবার বকেয়া হিসেবে দেখাবে।");
+    }
+
+    /** Loan left after this receipt; a settlement's waived amount counts as cleared from that receipt on. */
+    private function kistiLeft(Transaction $tx, string $paidThrough): string
+    {
+        $left = Money::sub((string) $tx->account->kistiDetail->total_payable, $paidThrough);
+        $settlement = \App\Models\KistiSettlement::query()->where('account_id', $tx->account_id)
+            ->where('status', 'active')->where('transaction_id', '<=', $tx->id)->first();
+
+        return $settlement ? Money::sub($left, (string) $settlement->waived_amount) : $left;
     }
 
     private function date(?string $value): ?Carbon

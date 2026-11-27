@@ -1,12 +1,6 @@
 <x-layouts.app title="নতুন কিস্তি অ্যাকাউন্ট">
     <x-page-header title="নতুন কিস্তি অ্যাকাউন্ট" description="ঋণের শর্ত একবার সংরক্ষণের পর পরিবর্তন করা যায় না — সাবধানে মিলিয়ে নিন।" />
 
-    @if ($members->isEmpty())
-        <div class="panel max-w-3xl p-5 text-ink-soft">
-            ঋণ দেওয়ার মতো কোনো সক্রিয় সদস্য নেই।
-            <a href="{{ route(auth()->user()->isAdmin() ? 'admin.members.create' : 'collector.members.create') }}" class="font-semibold text-ledger-700 underline">আগে সদস্য যোগ করুন</a>।
-        </div>
-    @else
         <form method="POST" action="{{ route($rp . '.store') }}" class="grid max-w-5xl gap-6 lg:grid-cols-5"
               x-data="kistiForm({
                   frequency: @js(old('frequency', 'daily')),
@@ -15,11 +9,24 @@
                   each: @js(old('installment_amount', '')),
                   start: @js(old('start_date', today()->toDateString())),
                   first: @js(old('first_installment_date', '')),
+                  mode: @js(old('member_mode', ($members->isEmpty() || request('new')) ? 'new' : 'existing')),
               })">
             @csrf
             <div class="panel space-y-4 p-5 lg:col-span-3">
-                <div>
-                    <label for="member_id" class="field-label">সদস্য<span class="text-danger" aria-hidden="true"> *</span></label>
+                <fieldset>
+                    <legend class="field-label">সদস্য</legend>
+                    <div class="flex gap-2">
+                        <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-rule px-3 py-2 text-[15px] has-[:checked]:border-ledger-600 has-[:checked]:bg-ledger-100 has-[:checked]:font-semibold">
+                            <input type="radio" name="member_mode" value="existing" x-model="mode" class="text-ledger-700" @disabled($members->isEmpty())> বিদ্যমান সদস্য
+                        </label>
+                        <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-rule px-3 py-2 text-[15px] has-[:checked]:border-ledger-600 has-[:checked]:bg-ledger-100 has-[:checked]:font-semibold">
+                            <input type="radio" name="member_mode" value="new" x-model="mode" class="text-ledger-700"> নতুন সদস্য
+                        </label>
+                    </div>
+                </fieldset>
+
+                <fieldset x-show="mode === 'existing'" :disabled="mode !== 'existing'">
+                    <label for="member_id" class="field-label">সদস্য নির্বাচন করুন<span class="text-danger" aria-hidden="true"> *</span></label>
                     <select id="member_id" name="member_id" class="field" required>
                         <option value="">— সদস্য নির্বাচন করুন —</option>
                         @foreach ($members as $m)
@@ -29,7 +36,13 @@
                         @endforeach
                     </select>
                     @error('member_id') <p class="field-error">{{ $message }}</p> @enderror
-                </div>
+                </fieldset>
+
+                <fieldset x-show="mode === 'new'" x-cloak :disabled="mode !== 'new'" class="rounded-md border border-rule p-4">
+                    <p class="mb-3 font-semibold text-ledger-900">নতুন সদস্যের তথ্য</p>
+                    @include('members.partials.form', ['collectors' => $collectors, 'suggestedCode' => $suggestedCode, 'withNotes' => false])
+                    <p class="field-help mt-3">সদস্য ও কিস্তি অ্যাকাউন্ট একসাথে সংরক্ষণ হবে। সমিতি অ্যাকাউন্ট লাগলে পরে সদস্যের পাতা থেকে খুলুন।</p>
+                </fieldset>
 
                 <fieldset>
                     <legend class="field-label">কিস্তির ধরন</legend>
@@ -128,5 +141,4 @@
                 };
             }
         </script>
-    @endif
 </x-layouts.app>

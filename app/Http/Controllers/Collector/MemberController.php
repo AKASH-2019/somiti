@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMemberRequest;
 use App\Http\Requests\UpdateMemberRequest;
 use App\Models\Member;
+use App\Services\Members\MemberOnboardingService;
 use App\Services\Members\MemberService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,17 +26,20 @@ class MemberController extends Controller
         return view('collector.members.index', compact('members'));
     }
 
-    public function create(): View
+    public function create(\App\Services\Members\MemberCodeService $codes, \App\Services\SettingService $settings): View
     {
-        return view('collector.members.create');
+        return view('collector.members.create', [
+            'suggestedCode' => $codes->next(),
+            'shareValue' => $settings->shareValue(),
+        ]);
     }
 
-    public function store(StoreMemberRequest $request, MemberService $service): RedirectResponse
+    public function store(StoreMemberRequest $request, MemberOnboardingService $service): RedirectResponse
     {
-        $member = $service->create($request->validated(), $request->user());
+        [$member, $account] = $service->create($request->validated(), $request->user());
 
         return redirect()->route('collector.members.show', $member)
-            ->with('success', "সদস্য {$member->name} যোগ করা হয়েছে। সদস্য আইডি: {$member->member_code}");
+            ->with('success', MemberOnboardingService::message($member, $account));
     }
 
     public function show(Member $member): View

@@ -21,6 +21,12 @@
                     @error('org_address') <p class="field-error">{{ $message }}</p> @enderror
                 </div>
                 <div>
+                    <label for="member_id_prefix" class="field-label">সদস্য আইডির শুরু</label>
+                    <input id="member_id_prefix" name="member_id_prefix" class="field uppercase" maxlength="10" value="{{ old('member_id_prefix', $settings['member_id_prefix']) }}" required>
+                    <p class="field-help">নতুন সদস্যের আইডি হবে: {{ old('member_id_prefix', $settings['member_id_prefix']) }}-০০১, -০০২ …</p>
+                    @error('member_id_prefix') <p class="field-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
                     <label for="org_mobile" class="field-label">মোবাইল নম্বর</label>
                     <input id="org_mobile" name="org_mobile" class="field" inputmode="tel" value="{{ old('org_mobile', $settings['org_mobile']) }}">
                     @error('org_mobile') <p class="field-error">{{ $message }}</p> @enderror

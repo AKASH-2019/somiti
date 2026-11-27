@@ -24,7 +24,11 @@ use Illuminate\Support\Facades\DB;
  */
 class ReversalService
 {
-    public function __construct(private CashLedgerService $ledger, private AuditService $audit) {}
+    public function __construct(
+        private CashLedgerService $ledger,
+        private AuditService $audit,
+        private \App\Services\Kisti\KistiSettlementService $settlements,
+    ) {}
 
     public function reverse(Transaction $tx, string $reason, User $actor): Transaction
     {
@@ -38,6 +42,14 @@ class ReversalService
                 throw new CollectionException('এই লেনদেন আগেই বাতিল করা হয়েছে।');
             }
             $account = Account::query()->lockForUpdate()->findOrFail($tx->account_id);
+
+            // A settlement receipt: first put the waived amounts back and re-open the loan.
+            $settlement = \App\Models\KistiSettlement::query()->where('transaction_id', $tx->id)->where('status', 'active')->first();
+            if ($settlement) {
+                $this->settlements->undo($settlement, $actor);
+            } elseif ($account->status === AccountStatus::Settled) {
+                throw new CollectionException('এই ঋণটি সেটেলমেন্টে বন্ধ। আগে সেটেলমেন্টের রসিদটি বাতিল করুন, তারপর এই লেনদেন।');
+            }
 
             $allocations = TransactionAllocation::query()->where('transaction_id', $tx->id)->where('status', 'active')->get();
             foreach ($allocations as $alloc) {

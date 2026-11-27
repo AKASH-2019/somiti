@@ -52,6 +52,16 @@ class Account extends Model
         return $this->hasOne(KistiAccountDetail::class);
     }
 
+    public function settlements(): HasMany
+    {
+        return $this->hasMany(KistiSettlement::class)->latest('id');
+    }
+
+    public function activeSettlement(): ?KistiSettlement
+    {
+        return $this->settlements()->where('status', 'active')->first();
+    }
+
     public function installments(): HasMany
     {
         return $this->hasMany(Installment::class);

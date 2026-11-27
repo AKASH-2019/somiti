@@ -30,6 +30,11 @@ class AccountPolicy
         return $user->isAdmin();
     }
 
+    public function settle(User $user, Account $account): bool
+    {
+        return $user->isAdmin() && $account->isActive();
+    }
+
     public function cancel(User $user, Account $account): bool
     {
         return $user->isAdmin();

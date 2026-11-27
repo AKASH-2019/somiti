@@ -8,6 +8,7 @@ enum AccountStatus: string
     case Active = 'active';
     case Closed = 'closed';
     case Cancelled = 'cancelled';
+    case Settled = 'settled';
 
     public function label(): string
     {
@@ -15,6 +16,7 @@ enum AccountStatus: string
             self::Active => 'চালু',
             self::Closed => 'বন্ধ',
             self::Cancelled => 'বাতিল',
+            self::Settled => 'সেটেলমেন্টে বন্ধ',
         };
     }
 }

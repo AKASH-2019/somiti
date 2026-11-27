@@ -24,14 +24,32 @@ class StoreKistiAccountRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->normalizeNumbers(['loan_amount', 'service_charge', 'installment_amount']);
+        $this->normalizePhones(['mobile']);
+        $this->merge([
+            'member_mode' => $this->input('member_mode', 'existing'),
+            'member_code' => \App\Services\Members\MemberCodeService::normalize($this->input('member_code')),
+        ]);
+    }
+
+    public function isNewMember(): bool
+    {
+        return $this->input('member_mode') === 'new';
+    }
+
+    /** Only the member fields, for creating the new member. */
+    public function memberData(): array
+    {
+        return array_intersect_key($this->validated(), array_flip(
+            ['member_code', 'name', 'business_name', 'business_address', 'mobile', 'joined_at', 'collector_id']));
     }
 
     public function rules(): array
     {
         $money = ['numeric', 'decimal:0,2', 'max:99999999'];
 
-        return [
-            'member_id' => ['required', 'integer', 'exists:members,id'],
+        $rules = [
+            'member_mode' => ['required', 'in:existing,new'],
+            'member_id' => ['exclude_unless:member_mode,existing', 'required', 'integer', 'exists:members,id'],
             'frequency' => ['required', Rule::enum(KistiFrequency::class)],
             'loan_amount' => ['required', ...$money, 'gt:0'],
             'service_charge' => ['nullable', ...$money, 'min:0'],
@@ -40,6 +58,14 @@ class StoreKistiAccountRequest extends FormRequest
             'first_installment_date' => ['required', 'date', 'after_or_equal:start_date'],
             'notes' => ['nullable', 'string', 'max:500'],
         ];
+
+        if ($this->isNewMember()) {
+            $member = StoreMemberRequest::memberRules($this->user());
+            unset($member['notes']); // "notes" on this form belong to the loan
+            $rules += $member;
+        }
+
+        return $rules;
     }
 
     public function after(): array
@@ -48,14 +74,20 @@ class StoreKistiAccountRequest extends FormRequest
             if ($validator->errors()->isNotEmpty()) {
                 return;
             }
-            $member = Member::query()->find($this->input('member_id'));
-            if (! $member || ! $this->user()->can('create', [Account::class, $member])) {
-                $validator->errors()->add('member_id', 'এই সদস্যকে ঋণ দেওয়া যাবে না (সদস্য নিষ্ক্রিয় অথবা আপনার দায়িত্বে নেই)।');
+            if ($this->isNewMember()) {
+                if ($this->date('start_date')->lt($this->date('joined_at'))) {
+                    $validator->errors()->add('start_date', 'কিস্তি শুরুর তারিখ সদস্যের যোগদানের তারিখের আগে হতে পারবে না।');
+                }
+            } else {
+                $member = Member::query()->find($this->input('member_id'));
+                if (! $member || ! $this->user()->can('create', [Account::class, $member])) {
+                    $validator->errors()->add('member_id', 'এই সদস্যকে ঋণ দেওয়া যাবে না (সদস্য নিষ্ক্রিয় অথবা আপনার দায়িত্বে নেই)।');
 
-                return;
-            }
-            if ($member->joined_at && $this->date('start_date')->lt($member->joined_at)) {
-                $validator->errors()->add('start_date', 'কিস্তি শুরুর তারিখ সদস্যের যোগদানের তারিখের আগে হতে পারবে না।');
+                    return;
+                }
+                if ($member->joined_at && $this->date('start_date')->lt($member->joined_at)) {
+                    $validator->errors()->add('start_date', 'কিস্তি শুরুর তারিখ সদস্যের যোগদানের তারিখের আগে হতে পারবে না।');
+                }
             }
             try {
                 $terms = KistiAccountService::terms((string) $this->input('loan_amount'),
@@ -71,7 +103,7 @@ class StoreKistiAccountRequest extends FormRequest
 
     public function attributes(): array
     {
-        return [
+        return StoreMemberRequest::memberAttributes() + [
             'member_id' => 'সদস্য', 'frequency' => 'কিস্তির ধরন', 'loan_amount' => 'ঋণের পরিমাণ',
             'service_charge' => 'সার্ভিস চার্জ', 'installment_amount' => 'প্রতি কিস্তির টাকা',
             'start_date' => 'কিস্তি শুরুর তারিখ', 'first_installment_date' => 'প্রথম কিস্তির তারিখ',
@@ -80,7 +112,7 @@ class StoreKistiAccountRequest extends FormRequest
 
     public function messages(): array
     {
-        return [
+        return StoreMemberRequest::memberMessages() + [
             'first_installment_date.after_or_equal' => 'প্রথম কিস্তির তারিখ কিস্তি শুরুর তারিখের আগে হতে পারবে না।',
             'start_date.before_or_equal' => 'কিস্তি শুরুর তারিখ আজ থেকে ৩০ দিনের মধ্যে হতে হবে।',
         ];

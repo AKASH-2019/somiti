@@ -12,11 +12,12 @@ class KistiStatementService
     {
         $today = today()->toDateString();
         $rows = Installment::query()->where('account_id', $account->id)->orderBy('sequence_no')
-            ->get(['id', 'sequence_no', 'due_date', 'amount_due', 'amount_paid', 'status']);
+            ->get(['id', 'sequence_no', 'due_date', 'amount_due', 'amount_paid', 'amount_waived', 'status']);
 
         $p = fn ($v) => Money::toPaisa((string) $v);
         $total = $rows->sum(fn ($r) => $p($r->amount_due));
         $paid = $rows->sum(fn ($r) => $p($r->amount_paid));
+        $waived = $rows->sum(fn ($r) => $p($r->amount_waived));
         $overdueRows = $rows->filter(fn ($r) => $r->due_date->toDateString() <= $today && $p($r->amount_paid) < $p($r->amount_due));
         $overdue = $overdueRows->sum(fn ($r) => $p($r->amount_due) - $p($r->amount_paid));
         $advance = $rows->filter(fn ($r) => $r->due_date->toDateString() > $today)->sum(fn ($r) => $p($r->amount_paid));
@@ -26,6 +27,7 @@ class KistiStatementService
             'total' => Money::fromPaisa($total),
             'paid' => Money::fromPaisa($paid),
             'remaining' => Money::fromPaisa($total - $paid),
+            'waived' => Money::fromPaisa($waived),
             'overdue' => Money::fromPaisa($overdue),
             'overdue_count' => $overdueRows->count(),
             'advance' => Money::fromPaisa($advance),

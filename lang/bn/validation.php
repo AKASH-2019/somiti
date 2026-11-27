@@ -98,5 +98,10 @@ return [
         'collector_id' => 'কালেক্টর',
         'notes' => 'মন্তব্য',
         'reason' => 'কারণ',
+        'member_id_prefix' => 'সদস্য আইডির শুরু',
+        'member_code' => 'সদস্য আইডি',
+        'number_of_shares' => 'শেয়ারের সংখ্যা',
+        'somiti_start_date' => 'সঞ্চয় শুরুর তারিখ',
+        'opening_balance' => 'প্রারম্ভিক সঞ্চয়',
     ],
 ];

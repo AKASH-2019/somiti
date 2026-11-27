@@ -12,7 +12,7 @@ use Illuminate\View\View;
 
 class SettingController extends Controller
 {
-    private const KEYS = ['org_name', 'org_address', 'org_mobile', 'share_value', 'weekly_off_days', 'receipt_footer'];
+    private const KEYS = ['org_name', 'org_address', 'org_mobile', 'share_value', 'weekly_off_days', 'receipt_footer', 'member_id_prefix'];
 
     public function edit(SettingService $settings): View
     {

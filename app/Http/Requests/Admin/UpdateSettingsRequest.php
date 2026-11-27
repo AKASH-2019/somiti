@@ -11,6 +11,16 @@ class UpdateSettingsRequest extends FormRequest
         return $this->user()?->isAdmin() ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['member_id_prefix' => strtoupper(trim((string) $this->input('member_id_prefix', 'S5')))]);
+    }
+
+    public function messages(): array
+    {
+        return ['member_id_prefix.regex' => 'সদস্য আইডির শুরুতে শুধু ইংরেজি অক্ষর ও সংখ্যা ব্যবহার করুন (যেমন: S5)।'];
+    }
+
     public function rules(): array
     {
         return [
@@ -21,6 +31,7 @@ class UpdateSettingsRequest extends FormRequest
             'weekly_off_days' => ['nullable', 'array'],
             'weekly_off_days.*' => ['integer', 'between:0,6'],
             'receipt_footer' => ['nullable', 'string', 'max:255'],
+            'member_id_prefix' => ['required', 'string', 'max:10', 'regex:/^[A-Za-z0-9]+$/'],
         ];
     }
 }

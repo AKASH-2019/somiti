@@ -1,7 +1,8 @@
 <x-layouts.app title="কিস্তি">
     <x-page-header title="কিস্তি অ্যাকাউন্ট" description="দৈনিক ও সাপ্তাহিক ঋণ পরিশোধ">
         <x-slot:actions>
-            <a href="{{ route($rp . '.create') }}" class="btn-primary">নতুন কিস্তি অ্যাকাউন্ট</a>
+            <a href="{{ route($rp . '.create', ['new' => 1]) }}" class="btn-quiet">নতুন সদস্যকে কিস্তি</a>
+            <a href="{{ route($rp . '.create') }}" class="btn-primary">বিদ্যমান সদস্যকে কিস্তি</a>
         </x-slot:actions>
     </x-page-header>
 
@@ -18,6 +19,7 @@
             <select id="status" name="status" class="field w-auto">
                 <option value="active" @selected($status === 'active')>চালু</option>
                 <option value="closed" @selected($status === 'closed')>পরিশোধিত/বন্ধ</option>
+                <option value="settled" @selected($status === 'settled')>সেটেলমেন্টে বন্ধ</option>
                 <option value="cancelled" @selected($status === 'cancelled')>বাতিল</option>
             </select>
         </div>
@@ -69,7 +71,7 @@
                             <td class="num whitespace-nowrap">{{ bn_money($k->total_payable) }}</td>
                             <td class="num whitespace-nowrap">{{ bn_money($k->installment_amount) }} × {{ bn_digits($k->total_installments) }}</td>
                             <td class="num whitespace-nowrap">{{ bn_money($paid) }}</td>
-                            <td class="num whitespace-nowrap">{{ bn_money(\App\Support\Money::sub((string) $k->total_payable, $paid)) }}</td>
+                            <td class="num whitespace-nowrap">{{ bn_money(\App\Support\Money::sub(\App\Support\Money::sub((string) $k->total_payable, $paid), number_format((float) $a->waived_sum, 2, '.', ''))) }}</td>
                             @if ($collectors->isNotEmpty())<td>{{ $a->collector?->name ?? '—' }}</td>@endif
                             <td class="text-right"><a href="{{ route($rp . '.show', $a) }}" class="text-sm font-semibold text-ledger-700 hover:underline">বিস্তারিত</a></td>
                         </tr>

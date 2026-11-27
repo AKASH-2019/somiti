@@ -70,6 +70,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('/', 'store')->name('store');
             Route::get('/{account}', 'show')->name('show');
             Route::post('/{account}/cancel', 'cancel')->name('cancel');
+            Route::post('/{account}/settle', 'settle')->name('settle');
         });
         Route::prefix('collections')->name('collections.')->controller(CollectionController::class)->group(function () {
             Route::redirect('/', '/admin/collections/somiti')->name('index');
